@@ -11,6 +11,11 @@ type IWebSocketClient interface {
 	WriteMessageToSocketConnInterval(conn *websocket.Conn, data []byte, seconds time.Duration) error
 }
 
+type IFileClient interface {
+	InitFileConn() error
+	WriteToFile(str string)
+}
+
 const (
 	// Channels
 	matches = "matches"

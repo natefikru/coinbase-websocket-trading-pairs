@@ -1,7 +1,6 @@
 package service
 
 import (
-	"coinbase-websocket-trading-pairs/util"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,22 +13,29 @@ import (
 
 type Service struct {
 	WebsocketClient IWebSocketClient
-	Config          *util.Config
+	FileClient      IFileClient
+	SocketUrl       string
 	TotalValues     map[string]PairTotalValue
 }
 
-func NewService(websocketClient IWebSocketClient, config *util.Config) *Service {
-	totalValues := make(map[string]PairTotalValue)
+func NewService(websocketClient IWebSocketClient, fileClient IFileClient, socketURL string) *Service {
 	return &Service{
 		WebsocketClient: websocketClient,
-		Config:          config,
-		TotalValues:     totalValues,
+		FileClient:      fileClient,
+		SocketUrl:       socketURL,
+		TotalValues:     make(map[string]PairTotalValue),
 	}
 }
 
 func (s *Service) Run() error {
+	// Initialize standard out file
+	err := s.FileClient.InitFileConn()
+	if err != nil {
+		err = errors.Wrap(err, "issue initializing file")
+		return err
+	}
 	// Establish WebSocket Connection
-	conn, err := s.WebsocketClient.EstablishConnection(s.Config.CoinbaseSocketURL)
+	conn, err := s.WebsocketClient.EstablishConnection(s.SocketUrl)
 	if err != nil {
 		err = errors.Wrap(err, "Error Establishing Connection")
 		return err
@@ -38,7 +44,7 @@ func (s *Service) Run() error {
 	// Start Websocket Connection Listener
 	go s.socketListener(conn)
 
-	// set up the coinbase subscription message object
+	// set up the subscription message object
 	request := s.setUpRequest()
 
 	// convert request to byte slice
@@ -147,7 +153,7 @@ func (s *Service) evaluateMatch(response *Response) error {
 	pairValues.Average = pairValues.TotalSum / float64(pairValues.TotalCount)
 	s.TotalValues[response.ProductID] = pairValues
 
-	//TODO: save new line file
+	s.FileClient.WriteToFile(fmt.Sprintf("Product ID: %v, Total Count: %v, VWAP: %v", response.ProductID, pairValues.TotalCount, pairValues.Average))
 	fmt.Println(response.ProductID, pairValues.TotalCount, pairValues.Average)
 
 	return nil
