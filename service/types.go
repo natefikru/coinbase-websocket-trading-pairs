@@ -23,7 +23,7 @@ const (
 	subscribeIntervalSeconds = 4
 )
 
-func (s *Service) getProductIDs() []string {
+func (s *Service) getSupportedProductIDs() []string {
 	return []string{
 		"BTC-USD",
 		"ETH-USD",

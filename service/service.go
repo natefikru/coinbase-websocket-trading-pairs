@@ -83,7 +83,7 @@ func (s *Service) socketListener(conn *websocket.Conn) {
 func (s *Service) setUpRequest() *SubscribeMessage {
 	var channels []interface{}
 	channels = append(channels, matches)
-	productIDs := s.getProductIDs()
+	productIDs := s.getSupportedProductIDs()
 
 	// Initialize trading pairs dict
 	for _, key := range productIDs {
