@@ -61,8 +61,8 @@ type Response struct {
 }
 
 type PairTotalValue struct {
-	MatchQueue []Response
-	TotalCount int
-	TotalSum   float64
-	Average    float64
+	MatchQueue                  []Response
+	TotalCount                  int
+	TotalSum                    float64
+	VolumeWeightedMovingAverage float64
 }

@@ -115,6 +115,7 @@ func (s *Service) evaluate(response *Response) error {
 	return nil
 }
 
+// evaluateMatch: parses the responses if its of 'match' type and updates the Volume Weighted Average Price
 func (s *Service) evaluateMatch(response *Response) error {
 	pairValues := s.TotalValues[response.ProductID]
 	if pairValues.TotalCount < 200 {
@@ -150,11 +151,14 @@ func (s *Service) evaluateMatch(response *Response) error {
 	}
 
 	// Evaluate and save new average by dividing totalSum by totalCount
-	pairValues.Average = pairValues.TotalSum / float64(pairValues.TotalCount)
+	pairValues.VolumeWeightedMovingAverage = pairValues.TotalSum / float64(pairValues.TotalCount)
+
+	// Replace the old product ID dictionary with the newly evaluated one
 	s.TotalValues[response.ProductID] = pairValues
 
-	s.FileClient.WriteToFile(fmt.Sprintf("Product ID: %v, Total Count: %v, VWAP: %v", response.ProductID, pairValues.TotalCount, pairValues.Average))
-	fmt.Println(response.ProductID, pairValues.TotalCount, pairValues.Average)
+	// Write new Volume Weighted Average Price to file
+	s.FileClient.WriteToFile(fmt.Sprintf("Product ID: %v, Total Count: %v, VWAP: %v", response.ProductID, pairValues.TotalCount, pairValues.VolumeWeightedMovingAverage))
+	fmt.Println(response.ProductID, pairValues.TotalCount, pairValues.VolumeWeightedMovingAverage)
 
 	return nil
 }
