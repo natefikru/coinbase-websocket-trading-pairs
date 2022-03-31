@@ -26,10 +26,10 @@ func (ws *WebSocketClient) EstablishConnection(url string) (*websocket.Conn, err
 	return conn, nil
 }
 
-func (ws *WebSocketClient) WriteMessageToSocketConn(conn *websocket.Conn, data []byte) error {
+func (ws *WebSocketClient) WriteMessageToSocketConnInterval(conn *websocket.Conn, data []byte, seconds time.Duration) error {
 	for {
 		select {
-		case <-time.After(time.Second * 4):
+		case <-time.After(seconds):
 			// Send a packet every 4 seconds
 			err := conn.WriteMessage(websocket.TextMessage, data)
 			if err != nil {

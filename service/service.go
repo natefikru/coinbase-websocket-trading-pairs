@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
@@ -48,7 +49,7 @@ func (s *Service) Run() error {
 	}
 
 	// write subscribe message to the socket connection
-	err = s.WebsocketClient.WriteMessageToSocketConn(conn, requestBytes)
+	err = s.WebsocketClient.WriteMessageToSocketConnInterval(conn, requestBytes, time.Second*subscribeIntervalSeconds)
 	if err != nil {
 		err = errors.Wrap(err, "Error Executing Connection")
 		return err
@@ -81,7 +82,7 @@ func (s *Service) socketListener(conn *websocket.Conn) {
 // setUpRequest: initializes request with pre-defined channels and trading pair product id's
 func (s *Service) setUpRequest() *SubscribeMessage {
 	var channels []interface{}
-	channels = append(channels, Matches)
+	channels = append(channels, matches)
 	productIDs := s.getProductIDs()
 
 	// Initialize trading pairs dict
@@ -91,7 +92,7 @@ func (s *Service) setUpRequest() *SubscribeMessage {
 	}
 
 	return &SubscribeMessage{
-		Type:       Subscribe,
+		Type:       subscribe,
 		ProductIDs: productIDs,
 		Channels:   channels,
 	}
@@ -99,7 +100,7 @@ func (s *Service) setUpRequest() *SubscribeMessage {
 
 func (s *Service) evaluate(response *Response) error {
 	switch response.Type {
-	case Match:
+	case match:
 		err := s.evaluateMatch(response)
 		if err != nil {
 			return err

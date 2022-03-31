@@ -1,19 +1,26 @@
 package service
 
-import "github.com/gorilla/websocket"
+import (
+	"time"
+
+	"github.com/gorilla/websocket"
+)
 
 type IWebSocketClient interface {
 	EstablishConnection(url string) (*websocket.Conn, error)
-	WriteMessageToSocketConn(conn *websocket.Conn, data []byte) error
+	WriteMessageToSocketConnInterval(conn *websocket.Conn, data []byte, seconds time.Duration) error
 }
 
 const (
 	// Channels
-	Matches = "matches"
+	matches = "matches"
 
 	// Types
-	Subscribe = "subscribe"
-	Match     = "match"
+	subscribe = "subscribe"
+	match     = "match"
+
+	// Options
+	subscribeIntervalSeconds = 4
 )
 
 func (s *Service) getProductIDs() []string {
