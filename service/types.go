@@ -16,6 +16,14 @@ const (
 	Match     = "match"
 )
 
+func (s *Service) getProductIDs() []string {
+	return []string{
+		"BTC-USD",
+		"ETH-USD",
+		"ETH-BTC",
+	}
+}
+
 type SubscribeMessage struct {
 	Type       string        `json:"type"`
 	ProductIDs []string      `json:"product_ids"`

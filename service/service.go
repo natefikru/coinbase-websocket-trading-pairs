@@ -26,31 +26,29 @@ func NewService(websocketClient IWebSocketClient, config *util.Config) *Service 
 	}
 }
 
-func (s *Service) getProductIDs() []string {
-	return []string{
-		"BTC-USD",
-		"ETH-USD",
-		"ETH-BTC",
-	}
-}
-
 func (s *Service) Run() error {
+	// Establish WebSocket Connection
 	conn, err := s.WebsocketClient.EstablishConnection(s.Config.CoinbaseSocketURL)
 	if err != nil {
 		err = errors.Wrap(err, "Error Establishing Connection")
 		return err
 	}
 
-	go s.socketMatchListener(conn)
+	// Start Websocket Connection Listener
+	go s.socketListener(conn)
 
+	// set up the coinbase subscription message object
 	request := s.setUpRequest()
-	newRequestByes, err := json.Marshal(request)
+
+	// convert request to byte slice
+	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		err = errors.Wrap(err, "Error marshalling request")
 		return err
 	}
 
-	err = s.WebsocketClient.WriteMessageToSocketConn(conn, newRequestByes)
+	// write subscribe message to the socket connection
+	err = s.WebsocketClient.WriteMessageToSocketConn(conn, requestBytes)
 	if err != nil {
 		err = errors.Wrap(err, "Error Executing Connection")
 		return err
@@ -58,13 +56,17 @@ func (s *Service) Run() error {
 	return nil
 }
 
-func (s *Service) socketMatchListener(conn *websocket.Conn) {
+// socketListener: infinite loop the reads all incoming messages from the socket connection
+func (s *Service) socketListener(conn *websocket.Conn) {
 	for {
+		// reads incoming messages
 		_, msgBytes, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("Error in reading messags from connection: ", err)
 			return
 		}
+
+		// convert bytes to response struct
 		var response Response
 		err = json.Unmarshal(msgBytes, &response)
 		if err != nil {
@@ -72,10 +74,11 @@ func (s *Service) socketMatchListener(conn *websocket.Conn) {
 			return
 		}
 
-		go s.evaluate(&response)
+		s.evaluate(&response)
 	}
 }
 
+// setUpRequest: initializes request with pre-defined channels and trading pair product id's
 func (s *Service) setUpRequest() *SubscribeMessage {
 	var channels []interface{}
 	channels = append(channels, Matches)
@@ -108,10 +111,10 @@ func (s *Service) evaluate(response *Response) error {
 func (s *Service) evaluateMatch(response *Response) error {
 	pairValues := s.TotalValues[response.ProductID]
 	if pairValues.TotalCount < 200 {
-		// add resp to end of queue
+		// Add resp to end of queue
 		pairValues.MatchQueue = append(pairValues.MatchQueue, *response)
 
-		// add response.Price to pairValues.TotalSum
+		// Add new price to total sum
 		price, err := strconv.ParseFloat(response.Price, 64)
 		if err != nil {
 			err = errors.Wrap(err, "error parsing sub 200 response.Price")
@@ -123,7 +126,8 @@ func (s *Service) evaluateMatch(response *Response) error {
 	} else {
 		// Save oldest Response
 		oldResp := pairValues.MatchQueue[0]
-		// remove oldest response off front of queue, add new response to end of queue
+
+		// Remove oldest response from front of queue, add new response to end of queue
 		pairValues.MatchQueue = append(pairValues.MatchQueue[1:], *response)
 
 		// subtract oldest resp price from total sum add new resp price to total sum
@@ -137,9 +141,12 @@ func (s *Service) evaluateMatch(response *Response) error {
 		}
 		pairValues.TotalSum = pairValues.TotalSum - oldPrice + newPrice
 	}
-	// save new to Average by dividing totalSum by totalCount(200)
+
+	// Evaluate and save new average by dividing totalSum by totalCount
 	pairValues.Average = pairValues.TotalSum / float64(pairValues.TotalCount)
 	s.TotalValues[response.ProductID] = pairValues
+
+	//TODO: save new line file
 	fmt.Println(response.ProductID, pairValues.TotalCount, pairValues.Average)
 
 	return nil

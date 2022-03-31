@@ -11,7 +11,7 @@ import (
 func main() {
 	log.Println("Running Coinbase Trading Pairs Web Socket Project")
 
-	// initialize configuration
+	// initialize configuration object
 	log.Println("Initializing Configuration")
 	config, err := util.LoadConfig()
 	if err != nil {
