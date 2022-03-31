@@ -12,18 +12,16 @@ func main() {
 	log.Println("Running Coinbase Trading Pairs Web Socket Project")
 
 	// initialize configuration
+	log.Println("Initializing Configuration")
 	config, err := util.LoadConfig()
 	if err != nil {
 		panic(fmt.Sprintf("cannot load config: %v", err))
 	}
 
-	log.Println("Initialized Configuration")
-
 	wsClient := websocketClient.NewWebSocketClient(config)
 	service := service.NewService(wsClient, config)
 
 	log.Println("Starting Service")
-
 	err = service.Run()
 	if err != nil {
 		panic(fmt.Sprintf("Error running the coinbase websocket service: %v", err))
