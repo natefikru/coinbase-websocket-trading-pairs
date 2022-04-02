@@ -1,4 +1,4 @@
-# ZeroHash Programming Exercise
+# Programming Exercise
 #### Nathnael Fikru 
 
 This is a backend process that initiates a web socket listener on the Coinbase Matching engine and maintains the volume weighted moving average of the last 200 responses per trading pair.
