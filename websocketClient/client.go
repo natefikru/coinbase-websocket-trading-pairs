@@ -39,3 +39,13 @@ func (ws *WebSocketClient) WriteMessageToSocketConnInterval(conn *websocket.Conn
 		}
 	}
 }
+
+// ReadMessageFromSockenConn: reads incoming messages from socket connection
+func (ws *WebSocketClient) ReadMessageFromSockenConn(conn *websocket.Conn) ([]byte, error) {
+	_, msgBytes, err := conn.ReadMessage()
+	if err != nil {
+		err = errors.Wrap(err, "error ReadMessageFromSockenConn")
+		return nil, err
+	}
+	return msgBytes, nil
+}

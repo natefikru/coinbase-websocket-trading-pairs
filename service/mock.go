@@ -50,6 +50,21 @@ func (mr *MockIWebSocketClientMockRecorder) EstablishConnection(url interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstablishConnection", reflect.TypeOf((*MockIWebSocketClient)(nil).EstablishConnection), url)
 }
 
+// ReadMessageFromSockenConn mocks base method.
+func (m *MockIWebSocketClient) ReadMessageFromSockenConn(conn *websocket.Conn) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadMessageFromSockenConn", conn)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadMessageFromSockenConn indicates an expected call of ReadMessageFromSockenConn.
+func (mr *MockIWebSocketClientMockRecorder) ReadMessageFromSockenConn(conn interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadMessageFromSockenConn", reflect.TypeOf((*MockIWebSocketClient)(nil).ReadMessageFromSockenConn), conn)
+}
+
 // WriteMessageToSocketConnInterval mocks base method.
 func (m *MockIWebSocketClient) WriteMessageToSocketConnInterval(conn *websocket.Conn, data []byte, seconds time.Duration) error {
 	m.ctrl.T.Helper()

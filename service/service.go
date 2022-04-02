@@ -30,6 +30,7 @@ func NewService(websocketClient IWebSocketClient, fileClient IFileClient, socket
 	}
 }
 
+// Run: main function that kicks off process
 func (s *Service) Run() error {
 	// Initialize standard out file
 	err := s.FileClient.InitFileConn()
@@ -69,31 +70,6 @@ func (s *Service) Run() error {
 	return nil
 }
 
-// socketListener: infinite loop the reads all incoming messages from the socket connection
-func (s *Service) socketListener(conn *websocket.Conn) {
-	for {
-		if !s.runListener {
-			break
-		}
-		// reads incoming messages
-		_, msgBytes, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("Error in reading messags from connection: ", err)
-			return
-		}
-
-		// convert bytes to response struct
-		var response Response
-		err = json.Unmarshal(msgBytes, &response)
-		if err != nil {
-			log.Println("Error unmarshalling match response:", err)
-			return
-		}
-
-		s.evaluate(&response)
-	}
-}
-
 // setUpRequest: initializes request with pre-defined channels and trading pair product id's
 func (s *Service) setUpRequest() *SubscribeMessage {
 	var channels []interface{}
@@ -110,6 +86,29 @@ func (s *Service) setUpRequest() *SubscribeMessage {
 		Type:       subscribe,
 		ProductIDs: productIDs,
 		Channels:   channels,
+	}
+}
+
+// socketListener: infinite loop the reads all incoming messages from the socket connection
+func (s *Service) socketListener(conn *websocket.Conn) {
+	for {
+		if !s.runListener {
+			break
+		}
+		respBytes, err := s.WebsocketClient.ReadMessageFromSockenConn(conn)
+		if err != nil {
+			log.Println("Error reading message in socketListener: ", err)
+			return
+		}
+		// convert bytes to response struct
+		var response Response
+		err = json.Unmarshal(respBytes, &response)
+		if err != nil {
+			log.Println("Error unmarshalling match response:", err)
+			return
+		}
+
+		s.evaluate(&response)
 	}
 }
 

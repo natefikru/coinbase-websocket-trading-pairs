@@ -9,6 +9,7 @@ import (
 type IWebSocketClient interface {
 	EstablishConnection(url string) (*websocket.Conn, error)
 	WriteMessageToSocketConnInterval(conn *websocket.Conn, data []byte, seconds time.Duration) error
+	ReadMessageFromSockenConn(conn *websocket.Conn) ([]byte, error)
 }
 
 type IFileClient interface {
