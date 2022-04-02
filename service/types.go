@@ -37,17 +37,14 @@ func (s *Service) getSupportedProductIDs() []string {
 	}
 }
 
+// SubscribeMessage: Coinbase Websocket request struct that is sent every 4 seconds to keep the connection alive.
 type SubscribeMessage struct {
 	Type       string        `json:"type"`
 	ProductIDs []string      `json:"product_ids"`
 	Channels   []interface{} `json:"channels"`
 }
 
-type TickerMessage struct {
-	Name       string   `json:"name"`
-	ProductIDs []string `json:"product_ids"`
-}
-
+// Response: Coinbase Websocket response struct
 type Response struct {
 	Type         string `json:"type"`
 	TradeID      int    `json:"trade_id"`
@@ -65,6 +62,9 @@ type PairTotalValue struct {
 	// MatchQueue: overall queue that keeps track of total responses in FIFO format
 	MatchQueue []Response
 
-	TotalSum                    float64
+	// TotalSum: attribute that keeps track of the total sum of all the priceses in the match queue
+	TotalSum float64
+
+	// VolumeWeightedMovingAverage: attribute that reflects TotalSum/len(MatchQueue)
 	VolumeWeightedMovingAverage float64
 }

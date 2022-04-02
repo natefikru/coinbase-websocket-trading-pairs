@@ -17,6 +17,7 @@ type Service struct {
 	FileClient      IFileClient
 	SocketUrl       string
 	TotalValues     map[string]PairTotalValue
+	runListener     bool
 }
 
 func NewService(websocketClient IWebSocketClient, fileClient IFileClient, socketURL string) *Service {
@@ -25,6 +26,7 @@ func NewService(websocketClient IWebSocketClient, fileClient IFileClient, socket
 		FileClient:      fileClient,
 		SocketUrl:       socketURL,
 		TotalValues:     make(map[string]PairTotalValue),
+		runListener:     true,
 	}
 }
 
@@ -70,6 +72,9 @@ func (s *Service) Run() error {
 // socketListener: infinite loop the reads all incoming messages from the socket connection
 func (s *Service) socketListener(conn *websocket.Conn) {
 	for {
+		if !s.runListener {
+			break
+		}
 		// reads incoming messages
 		_, msgBytes, err := conn.ReadMessage()
 		if err != nil {
@@ -161,7 +166,5 @@ func (s *Service) evaluateMatch(response *Response) error {
 	// Write new Volume Weighted Average Price to file
 	output := fmt.Sprintf("Product ID: %v, Total Count: %v, New Price: %v, VWAP: %v", response.ProductID, len(pairValues.MatchQueue), response.Price, math.Floor(pairValues.VolumeWeightedMovingAverage*100)/100)
 	s.FileClient.WriteToFile(output)
-	fmt.Println(output)
-
 	return nil
 }
