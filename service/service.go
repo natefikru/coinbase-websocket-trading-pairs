@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 	"time"
 
@@ -34,6 +35,9 @@ func (s *Service) Run() error {
 		err = errors.Wrap(err, "issue initializing file")
 		return err
 	}
+
+	s.FileClient.WriteToFile(fmt.Sprintf("\nStarted new client connection - %v", time.Now().Format("2017-09-07 17:06:06")))
+
 	// Establish WebSocket Connection
 	conn, err := s.WebsocketClient.EstablishConnection(s.SocketUrl)
 	if err != nil {
@@ -104,6 +108,7 @@ func (s *Service) setUpRequest() *SubscribeMessage {
 	}
 }
 
+// evaluate: starts evaluator process that parses socket response by type.
 func (s *Service) evaluate(response *Response) error {
 	switch response.Type {
 	case match:
@@ -115,10 +120,10 @@ func (s *Service) evaluate(response *Response) error {
 	return nil
 }
 
-// evaluateMatch: parses the responses if its of 'match' type and updates the Volume Weighted Average Price
+// evaluateMatch: for response of 'match' type, updates the Volume Weighted Average Price
 func (s *Service) evaluateMatch(response *Response) error {
 	pairValues := s.TotalValues[response.ProductID]
-	if pairValues.TotalCount < 200 {
+	if len(pairValues.MatchQueue) < 200 {
 		// Add resp to end of queue
 		pairValues.MatchQueue = append(pairValues.MatchQueue, *response)
 
@@ -128,9 +133,6 @@ func (s *Service) evaluateMatch(response *Response) error {
 			err = errors.Wrap(err, "error parsing sub 200 response.Price")
 		}
 		pairValues.TotalSum += price
-
-		// add 1 to count
-		pairValues.TotalCount += 1
 	} else {
 		// Save oldest Response
 		oldResp := pairValues.MatchQueue[0]
@@ -150,15 +152,16 @@ func (s *Service) evaluateMatch(response *Response) error {
 		pairValues.TotalSum = pairValues.TotalSum - oldPrice + newPrice
 	}
 
-	// Evaluate and save new average by dividing totalSum by totalCount
-	pairValues.VolumeWeightedMovingAverage = pairValues.TotalSum / float64(pairValues.TotalCount)
+	// Evaluate and save new average by dividing totalSum by count of total responses
+	pairValues.VolumeWeightedMovingAverage = pairValues.TotalSum / float64(len(pairValues.MatchQueue))
 
 	// Replace the old product ID dictionary with the newly evaluated one
 	s.TotalValues[response.ProductID] = pairValues
 
 	// Write new Volume Weighted Average Price to file
-	s.FileClient.WriteToFile(fmt.Sprintf("Product ID: %v, Total Count: %v, VWAP: %v", response.ProductID, pairValues.TotalCount, pairValues.VolumeWeightedMovingAverage))
-	fmt.Println(response.ProductID, pairValues.TotalCount, pairValues.VolumeWeightedMovingAverage)
+	output := fmt.Sprintf("Product ID: %v, Total Count: %v, New Price: %v, VWAP: %v", response.ProductID, len(pairValues.MatchQueue), response.Price, math.Floor(pairValues.VolumeWeightedMovingAverage*100)/100)
+	s.FileClient.WriteToFile(output)
+	fmt.Println(output)
 
 	return nil
 }

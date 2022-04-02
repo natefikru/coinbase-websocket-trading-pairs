@@ -17,6 +17,7 @@ func NewFileClient(fileName string) *FileClient {
 	}
 }
 
+// InitFileConn: checks if file already exists, opens connection to file.
 func (fc *FileClient) InitFileConn() error {
 	var f *os.File
 	exists, err := fc.valueFileExists()
@@ -39,6 +40,7 @@ func (fc *FileClient) InitFileConn() error {
 	return nil
 }
 
+// valueFileExists: looks for file value by name.
 func (fc *FileClient) valueFileExists() (bool, error) {
 	_, err := os.Stat(fc.FileName)
 	if err == nil {

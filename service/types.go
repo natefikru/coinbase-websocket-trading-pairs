@@ -28,6 +28,7 @@ const (
 	subscribeIntervalSeconds = 4
 )
 
+// getSupportedProductIDs: define trading pair product ID's that web socket listens to
 func (s *Service) getSupportedProductIDs() []string {
 	return []string{
 		"BTC-USD",
@@ -61,8 +62,9 @@ type Response struct {
 }
 
 type PairTotalValue struct {
-	MatchQueue                  []Response
-	TotalCount                  int
+	// MatchQueue: overall queue that keeps track of total responses in FIFO format
+	MatchQueue []Response
+
 	TotalSum                    float64
 	VolumeWeightedMovingAverage float64
 }
