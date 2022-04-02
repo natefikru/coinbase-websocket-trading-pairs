@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	websocket "github.com/gorilla/websocket"
+	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
 
